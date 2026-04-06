@@ -177,25 +177,38 @@
     }
 
     /* ─────────────────────────────────────────
-       MAIN LAYOUT
+       MAIN LAYOUT — two-column grid:
+       Left  = typing area (scrolls normally)
+       Right = sticky column with video + stats
+               always visible next to the game
     ───────────────────────────────────────── */
     main {
-      max-width: 1100px;
+      max-width: 1200px;
       margin: 0 auto;
       padding: 1rem 1.5rem 2rem;
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      grid-template-rows: auto;
+      gap: 1.5rem 1.5rem;
+      align-items: start;
+    }
+
+    /* Left column — all game controls stack vertically */
+    .game-col {
       display: flex;
       flex-direction: column;
       gap: 1.5rem;
+      min-width: 0; /* prevent overflow on narrow screens */
     }
 
-    /* ─────────────────────────────────────────
-       TOP ROW — VIDEO + STATS
-    ───────────────────────────────────────── */
-    .top-row {
-      display: grid;
-      grid-template-columns: 1fr 280px;
-      gap: 1.2rem;
-      align-items: start;
+    /* Right column — sticky so video stays visible while typing */
+    .side-col {
+      position: sticky;
+      top: 1.2rem;           /* gap from top of viewport */
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      align-self: start;    /* needed for sticky to work inside grid */
     }
 
     /* ─────────────────────────────────────────
@@ -220,8 +233,9 @@
     #timer-video {
       width: 100%;
       display: block;
-      max-height: 300px;
+      /* No max-height cap — let it fill the 300px column width naturally */
       object-fit: cover;
+      aspect-ratio: 16/9;
     }
     .video-label {
       position: absolute;
@@ -236,25 +250,38 @@
     .video-wrap.playing { box-shadow: 0 0 0 2px var(--accent), 0 0 40px rgba(255,60,60,0.3); }
 
     /* ─────────────────────────────────────────
-       STATS PANEL
+       STATS PANEL — compact horizontal row
+       inside the sticky sidebar
     ───────────────────────────────────────── */
-    .stats-panel { display: flex; flex-direction: column; gap: 0.8rem; }
+    .stats-panel {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0.5rem;
+    }
 
     .stat-card {
       background: var(--panel);
       border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 1rem 1.2rem;
+      padding: 0.7rem 0.6rem;
       display: flex;
       flex-direction: column;
-      gap: 0.3rem;
+      gap: 0.15rem;
       transition: border-color 0.3s, transform 0.2s;
       cursor: default;
+      text-align: center;
     }
-    .stat-card:hover { border-color: var(--accent2); transform: translateY(-3px); }
-    .stat-card .label { font-size: 0.65rem; letter-spacing: 4px; color: var(--muted); text-transform: uppercase; }
-    .stat-card .value { font-family: 'Bebas Neue', sans-serif; font-size: 2.5rem; line-height: 1; color: var(--accent2); }
-    .stat-card .unit  { font-size: 0.75rem; color: var(--muted); letter-spacing: 2px; }
+    .stat-card:hover { border-color: var(--accent2); transform: translateY(-2px); }
+    .stat-card .label { font-size: 0.55rem; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
+    .stat-card .value { font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem; line-height: 1; color: var(--accent2); }
+    .stat-card .unit  { font-size: 0.6rem; color: var(--muted); letter-spacing: 1px; }
+
+    /* Video progress bar lives inside the sticky side col too */
+    .video-progress-section {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
 
     /* ─────────────────────────────────────────
        PROGRESS BARS
@@ -283,7 +310,7 @@
     }
     .progress-fill.danger { background: var(--accent); animation: pulse-bar 0.5s infinite alternate; }
     .video-progress-fill {
-      height: 100%;
+      height: 8px; /* slightly taller so it's easy to read at a glance */
       border-radius: 99px;
       width: 0%;
       background: var(--accent);
@@ -379,7 +406,6 @@
     /* ─────────────────────────────────────────
        FORM & INPUT STYLES
     ───────────────────────────────────────── */
-    /* The form wraps the typing input — required for form submission event */
     #typing-form { display: flex; flex-direction: column; gap: 0.6rem; }
 
     #typing-input {
@@ -401,7 +427,6 @@
     #typing-input.input-error { border-color: var(--bad); animation: shake 0.3s ease; }
     #typing-input.input-ok { border-color: var(--good); }
 
-    /* Validation message shown below input */
     #form-message {
       font-family: 'Share Tech Mono', monospace;
       font-size: 0.75rem;
@@ -434,6 +459,8 @@
     .btn-primary:hover { background: #ff5555; box-shadow: 0 0 20px rgba(255,60,60,0.4); transform: translateY(-1px); }
     .btn-secondary { background: none; border-color: var(--border); color: var(--muted); }
     .btn-secondary:hover { border-color: var(--muted); color: var(--text); }
+    .btn-warning { background: var(--accent2); border-color: var(--accent2); color: #000; font-weight: bold; }
+    .btn-warning:hover { background: #ffaa33; box-shadow: 0 0 20px rgba(255,140,0,0.4); transform: translateY(-1px); }
 
     /* ─────────────────────────────────────────
        KEYBOARD SHORTCUTS BAR
@@ -461,7 +488,7 @@
     }
 
     /* ─────────────────────────────────────────
-       SCROLL HINT — placed ABOVE the rules section
+       SCROLL HINT
     ───────────────────────────────────────── */
     .scroll-hint {
       text-align: center;
@@ -470,6 +497,7 @@
       letter-spacing: 4px;
       color: var(--muted);
       animation: bounceDown 2s infinite;
+      transition: opacity 0.4s;
     }
     @keyframes bounceDown { 0%,100%{transform:translateY(0);} 50%{transform:translateY(6px);} }
 
@@ -500,7 +528,6 @@
       gap: 1rem;
     }
 
-    /* Rule cards start visible — reveal is a bonus animation, not a gate */
     .rule-card {
       background: var(--panel);
       border: 1px solid var(--border);
@@ -520,11 +547,12 @@
     .rule-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem; letter-spacing: 2px; }
     .rule-desc  { font-size: 0.88rem; color: var(--muted); line-height: 1.7; }
 
-    /* Stagger delays for card reveal */
     .rule-card:nth-child(1) { transition-delay: 0s; }
     .rule-card:nth-child(2) { transition-delay: 0.1s; }
     .rule-card:nth-child(3) { transition-delay: 0.2s; }
     .rule-card:nth-child(4) { transition-delay: 0.3s; }
+    .rule-card:nth-child(5) { transition-delay: 0.4s; }
+    .rule-card:nth-child(6) { transition-delay: 0.5s; }
 
     /* ─────────────────────────────────────────
        SOUND TOGGLE BUTTON
@@ -599,6 +627,75 @@
     .ov-stat .l { font-size:0.65rem; letter-spacing:3px; color:var(--muted); }
 
     /* ─────────────────────────────────────────
+       ESC QUIT CONFIRMATION MODAL  ← NEW
+    ───────────────────────────────────────── */
+    #quit-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 3000; /* above everything including win/lose overlay */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+      backdrop-filter: blur(4px);
+    }
+    #quit-modal.show {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .quit-box {
+      background: var(--panel);
+      border: 1px solid var(--accent);
+      border-radius: 12px;
+      padding: 2.5rem 3rem;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.2rem;
+      max-width: 420px;
+      width: 90%;
+      /* Slide + scale in animation */
+      animation: quitPop 0.3s cubic-bezier(0.22,1,0.36,1);
+      box-shadow: 0 0 60px rgba(255,60,60,0.2);
+    }
+    @keyframes quitPop {
+      from { transform: scale(0.88) translateY(20px); opacity: 0; }
+      to   { transform: scale(1)    translateY(0);    opacity: 1; }
+    }
+
+    .quit-icon  { font-size: 3rem; line-height: 1; }
+
+    .quit-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2rem;
+      letter-spacing: 5px;
+      color: var(--accent);
+      text-shadow: 0 0 20px rgba(255,60,60,0.4);
+    }
+
+    .quit-sub {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.82rem;
+      color: var(--muted);
+      letter-spacing: 1.5px;
+      line-height: 1.6;
+    }
+
+    /* Pulsing red border on the modal to create urgency */
+    @keyframes borderPulse {
+      0%,100% { box-shadow: 0 0 60px rgba(255,60,60,0.2); }
+      50%      { box-shadow: 0 0 60px rgba(255,60,60,0.5); }
+    }
+    .quit-box { animation: quitPop 0.3s cubic-bezier(0.22,1,0.36,1), borderPulse 1.5s infinite 0.3s; }
+
+    .quit-actions { display: flex; gap: 0.8rem; flex-wrap: wrap; justify-content: center; }
+
+    /* ─────────────────────────────────────────
        SCAN LINES (on lose)
     ───────────────────────────────────────── */
     .scanlines {
@@ -630,16 +727,11 @@
     /* ─────────────────────────────────────────
        PAGE LOAD ANIMATIONS
     ───────────────────────────────────────── */
-    .fade-in { opacity:0; transform:translateY(16px); animation:fadeInUp 0.6s forwards; }
     @keyframes fadeInUp { to{opacity:1; transform:translateY(0);} }
 
-    header              { animation: fadeInUp 0.5s 0.1s both; }
-    .top-row            { animation: fadeInUp 0.5s 0.25s both; }
-    .progress-section   { animation: fadeInUp 0.5s 0.35s both; }
-    .difficulty-section { animation: fadeInUp 0.5s 0.4s both; }
-    .typing-card        { animation: fadeInUp 0.5s 0.5s both; }
-    .actions            { animation: fadeInUp 0.5s 0.6s both; }
-    .shortcuts-bar      { animation: fadeInUp 0.5s 0.7s both; }
+    header              { animation: fadeInUp 0.5s 0.1s both; opacity:0; transform:translateY(16px); }
+    .game-col           { animation: fadeInUp 0.5s 0.2s both; opacity:0; transform:translateY(16px); }
+    .side-col           { animation: fadeInUp 0.5s 0.3s both; opacity:0; transform:translateY(16px); }
 
     /* ─────────────────────────────────────────
        SHAKE EFFECT
@@ -653,13 +745,24 @@
     /* ─────────────────────────────────────────
        RESPONSIVE
     ───────────────────────────────────────── */
-    @media (max-width: 700px) {
-      .top-row { grid-template-columns: 1fr; }
-      .stats-panel { flex-direction: row; flex-wrap: wrap; }
-      .stat-card { flex:1; min-width:120px; }
+    @media (max-width: 800px) {
+      /* Stack both columns vertically on mobile */
+      main {
+        grid-template-columns: 1fr;
+      }
+      /* On mobile the side col is no longer sticky — just flows normally */
+      .side-col {
+        position: static;
+        /* Put video ABOVE the typing area on mobile */
+        order: -1;
+      }
+      .stats-panel {
+        grid-template-columns: 1fr 1fr 1fr;
+      }
       .overlay-stats { gap: 1rem; }
       #sidebar { width: 85vw; }
       body.sidebar-open { padding-left: 0; }
+      .quit-box { padding: 2rem 1.5rem; }
     }
   </style>
 </head>
@@ -716,14 +819,78 @@
   <!-- ── MAIN GAME AREA ── -->
   <main>
 
-    <!-- TOP ROW: Video + Live Stats -->
-    <div class="top-row">
+    <!-- ═══ LEFT COLUMN — typing area ═══ -->
+    <div class="game-col">
 
-      <!-- Video timer panel -->
+      <div class="difficulty-section">
+        <div class="section-label">Difficulty:</div>
+        <div class="diff-btns" id="diff-btns-main">
+          <button class="diff-btn active" onclick="setDifficulty('easy')">EASY</button>
+          <button class="diff-btn" onclick="setDifficulty('medium')">MEDIUM</button>
+          <button class="diff-btn" onclick="setDifficulty('hard')">HARD</button>
+        </div>
+      </div>
+
+      <!-- Typing progress bar (left col) -->
+      <div class="progress-section">
+        <div class="progress-labels">
+          <span>TYPING PROGRESS</span>
+          <span id="progress-pct">0%</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="typing-progress-fill"></div>
+        </div>
+      </div>
+
+      <div class="typing-card" id="typing-card">
+        <div id="prompt-display" aria-live="polite">Press START to begin your trial.</div>
+
+        <!--
+          FORM SUBMISSION EVENT (Rubric requirement):
+          Wraps the input so 'submit' fires on Enter,
+          enabling validation and controlled handling.
+        -->
+        <form id="typing-form" novalidate>
+          <input
+            type="text"
+            id="typing-input"
+            placeholder="Start typing here after the game begins..."
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+            spellcheck="false"
+            disabled
+            aria-label="Typing input"
+            minlength="1"
+            required
+          />
+          <div id="form-message" role="alert" aria-live="polite"></div>
+        </form>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-primary" id="start-btn" onclick="startGame()">▶ START</button>
+        <button class="btn btn-secondary" id="reset-btn" onclick="resetGame()">↺ RESET</button>
+      </div>
+
+      <div class="shortcuts-bar">
+        <span class="shortcut"><kbd>ESC</kbd> <span id="esc-hint">Close sidebar</span></span>
+        <span class="shortcut"><kbd>Enter</kbd> Start / Restart</span>
+        <span class="shortcut"><kbd>Tab</kbd> Reset</span>
+        <span class="shortcut"><kbd>M</kbd> Menu</span>
+        <span class="shortcut"><kbd>S</kbd> Toggle sound</span>
+      </div>
+
+    </div><!-- /game-col -->
+
+    <!-- ═══ RIGHT COLUMN — sticky video + stats ═══ -->
+    <div class="side-col">
+
+      <!-- Video timer — stays fixed beside the typing area -->
       <div class="video-wrap" id="video-wrap">
         <!--
-          Place your timer video (timer.mp4) in the same folder as this HTML file.
-          The video acts as the death timer — when it ends, the player loses.
+          Place timer.mp4 in the same folder as this HTML file.
+          When the video ends the player loses.
         -->
         <video id="timer-video" preload="auto" playsinline>
           <source src="timer.mp4" type="video/mp4" />
@@ -732,105 +899,41 @@
         <div class="video-label" id="video-label">⏱ WAITING...</div>
       </div>
 
-      <!-- Live stat cards -->
+      <!-- Video progress bar lives under the video in the sticky col -->
+      <div class="video-progress-section">
+        <div class="progress-labels">
+          <span>VIDEO TIMER</span>
+          <span id="video-pct">0%</span>
+        </div>
+        <div class="progress-track" style="height:8px;">
+          <div class="video-progress-fill" id="video-progress-fill"></div>
+        </div>
+      </div>
+
+      <!-- Compact stat cards in a 3-column grid -->
       <div class="stats-panel">
         <div class="stat-card">
-          <div class="label">Words Per Min</div>
+          <div class="label">WPM</div>
           <div class="value" id="wpm-display">0</div>
-          <div class="unit">WPM</div>
+          <div class="unit">words/min</div>
         </div>
         <div class="stat-card">
           <div class="label">Accuracy</div>
           <div class="value" id="acc-display">100</div>
-          <div class="unit">%</div>
+          <div class="unit">percent</div>
         </div>
         <div class="stat-card">
-          <div class="label">Progress</div>
+          <div class="label">Chars</div>
           <div class="value" id="chars-display">0</div>
-          <div class="unit">CHARS DONE</div>
+          <div class="unit">done</div>
         </div>
       </div>
-    </div>
 
-    <!-- PROGRESS BARS: typing progress + video timer -->
-    <div class="progress-section">
-      <div class="progress-labels">
-        <span>TYPING PROGRESS</span>
-        <span id="progress-pct">0%</span>
-      </div>
-      <div class="progress-track">
-        <div class="progress-fill" id="typing-progress-fill"></div>
-      </div>
-
-      <div class="progress-labels" style="margin-top:0.5rem;">
-        <span>VIDEO TIMER</span>
-        <span id="video-pct">0%</span>
-      </div>
-      <div class="progress-track">
-        <div class="video-progress-fill" id="video-progress-fill"></div>
-      </div>
-    </div>
-
-    <!-- DIFFICULTY SELECTOR -->
-    <div class="difficulty-section">
-      <div class="section-label">Difficulty:</div>
-      <div class="diff-btns" id="diff-btns-main">
-        <button class="diff-btn active" onclick="setDifficulty('easy')">EASY</button>
-        <button class="diff-btn" onclick="setDifficulty('medium')">MEDIUM</button>
-        <button class="diff-btn" onclick="setDifficulty('hard')">HARD</button>
-      </div>
-    </div>
-
-    <!-- TYPING CARD -->
-    <div class="typing-card" id="typing-card">
-
-      <!-- The prompt text rendered as individual character spans -->
-      <div id="prompt-display" aria-live="polite">Press START to begin your trial.</div>
-
-      <!--
-        FORM SUBMISSION EVENT (Rubric requirement):
-        The form wraps the typing input so we can listen for the 'submit' event.
-        This fires when the user presses Enter, giving us a chance to validate
-        and process the input as a form submission rather than a raw key press.
-      -->
-      <form id="typing-form" novalidate>
-        <input
-          type="text"
-          id="typing-input"
-          placeholder="Start typing here after the game begins..."
-          autocomplete="off"
-          autocorrect="off"
-          autocapitalize="off"
-          spellcheck="false"
-          disabled
-          aria-label="Typing input"
-          minlength="1"
-          required
-        />
-        <!-- Validation feedback message shown below the input -->
-        <div id="form-message" role="alert" aria-live="polite"></div>
-      </form>
-
-    </div>
-
-    <!-- ACTION BUTTONS -->
-    <div class="actions">
-      <button class="btn btn-primary" id="start-btn" onclick="startGame()">▶ START</button>
-      <button class="btn btn-secondary" id="reset-btn" onclick="resetGame()">↺ RESET</button>
-    </div>
-
-    <!-- KEYBOARD SHORTCUTS REFERENCE BAR -->
-    <div class="shortcuts-bar">
-      <span class="shortcut"><kbd>ESC</kbd> Close sidebar</span>
-      <span class="shortcut"><kbd>Enter</kbd> Start / Restart</span>
-      <span class="shortcut"><kbd>Tab</kbd> Reset</span>
-      <span class="shortcut"><kbd>M</kbd> Menu</span>
-      <span class="shortcut"><kbd>S</kbd> Toggle sound</span>
-    </div>
+    </div><!-- /side-col -->
 
   </main>
 
-  <!-- ── SCROLL HINT — sits between game and rules so user sees it while at bottom of game ── -->
+  <!-- ── SCROLL HINT ── -->
   <div class="scroll-hint" id="scroll-hint">▼ &nbsp; SCROLL DOWN TO READ THE RULES &nbsp; ▼</div>
 
   <!-- ── HOW TO PLAY SECTION ── -->
@@ -863,9 +966,9 @@
       </div>
 
       <div class="rule-card" data-scroll-reveal>
-        <div class="rule-icon">🏆</div>
-        <div class="rule-title">Win Condition</div>
-        <div class="rule-desc">Finish typing the full passage before the video ends. Your WPM and accuracy are recorded on the results screen.</div>
+        <div class="rule-icon">🏳️</div>
+        <div class="rule-title">Forfeit Early</div>
+        <div class="rule-desc">Press ESC during a game to bring up a quit prompt. Confirm to surrender — you'll still get a YOU DIED screen.</div>
       </div>
 
       <div class="rule-card" data-scroll-reveal>
@@ -895,12 +998,31 @@
     </div>
   </div>
 
+  <!-- ── ESC QUIT CONFIRMATION MODAL ── NEW ── -->
+  <!--
+    This modal appears when the player presses ESC during an active game.
+    It pauses the video and gives the player a choice:
+    - YES, SURRENDER → triggers the lose screen (YOU DIED)
+    - NO, KEEP GOING → dismisses modal and resumes the game
+  -->
+  <div id="quit-modal" role="dialog" aria-modal="true" aria-label="Quit confirmation">
+    <div class="quit-box">
+      <div class="quit-icon">🏳️</div>
+      <div class="quit-title">SURRENDER?</div>
+      <div class="quit-sub">
+        Do you want to end the game early?<br>
+        You will receive a <strong style="color:var(--accent);">YOU DIED</strong> result.
+      </div>
+      <div class="quit-actions">
+        <button class="btn btn-warning" id="quit-confirm-btn" onclick="confirmQuit()">💀 YES, SURRENDER</button>
+        <button class="btn btn-secondary" id="quit-cancel-btn" onclick="cancelQuit()">↩ NO, KEEP GOING</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ── RESIZE INDICATOR ── -->
   <div id="resize-indicator">— × —</div>
 
-  <!-- ══════════════════════════════════════════════
-       JAVASCRIPT
-  ══════════════════════════════════════════════ -->
   <script>
     /* ─────────────────────────────────────
        PROMPTS BY DIFFICULTY
@@ -920,7 +1042,7 @@
       hard: [
         "The distinction between the possible and the impossible lies in a person's determination. Adrenaline floods your veins as the timer creeps toward zero and every keystroke echoes like a gunshot in the silence of desperation.",
         "Extraordinary claims require extraordinary evidence, and extraordinary speed requires extraordinary focus. Your heart pounds. Your palms sweat. The video does not care. It marches forward, indifferent and merciless, counting down your final seconds.",
-        "To live is the rarest thing in the world — most people merely exist. Right now you are very much alive, racing against a digital reaper that has no patience for hesitation, no sympathy for errors, and no pause button for the faint of heart.",
+        "To live is the rarest thing in the world - most people merely exist. Right now you are very much alive, racing against a digital reaper that has no patience for hesitation, no sympathy for errors, and no pause button for the faint of heart.",
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
       ],
     };
@@ -936,51 +1058,45 @@
       totalChars:   0,
       correctChars: 0,
       wpm:          0,
-      // Session totals (persist until page reload)
-      gamesPlayed: 0,
-      wins:        0,
-      bestWpm:     0,
+      gamesPlayed:  0,
+      wins:         0,
+      bestWpm:      0,
     };
 
     /* ─────────────────────────────────────
        SOUND STATE
     ───────────────────────────────────── */
     let soundEnabled = true;
-    let audioCtx     = null; // Web Audio context (lazy init)
+    let audioCtx     = null;
 
     /* ─────────────────────────────────────
        DOM REFERENCES
     ───────────────────────────────────── */
-    const video        = document.getElementById('timer-video');
-    const videoWrap    = document.getElementById('video-wrap');
-    const videoLabel   = document.getElementById('video-label');
-    const promptEl     = document.getElementById('prompt-display');
-    const inputEl      = document.getElementById('typing-input');
-    const formEl       = document.getElementById('typing-form');
-    const formMsg      = document.getElementById('form-message');
-    const startBtn     = document.getElementById('start-btn');
-    const overlay      = document.getElementById('overlay');
-    const scanlines    = document.getElementById('scanlines');
-    const sidebar      = document.getElementById('sidebar');
-    const resizeEl     = document.getElementById('resize-indicator');
-    const typingCard   = document.getElementById('typing-card');
-    const soundBtn     = document.getElementById('sound-btn');
+    const video      = document.getElementById('timer-video');
+    const videoWrap  = document.getElementById('video-wrap');
+    const videoLabel = document.getElementById('video-label');
+    const promptEl   = document.getElementById('prompt-display');
+    const inputEl    = document.getElementById('typing-input');
+    const formEl     = document.getElementById('typing-form');
+    const formMsg    = document.getElementById('form-message');
+    const startBtn   = document.getElementById('start-btn');
+    const overlay    = document.getElementById('overlay');
+    const quitModal  = document.getElementById('quit-modal');   // ← NEW
+    const scanlines  = document.getElementById('scanlines');
+    const sidebar    = document.getElementById('sidebar');
+    const resizeEl   = document.getElementById('resize-indicator');
+    const typingCard = document.getElementById('typing-card');
+    const soundBtn   = document.getElementById('sound-btn');
+    const escHint    = document.getElementById('esc-hint');     // ← NEW
 
     /* ─────────────────────────────────────
-       WEB AUDIO — lazy-init helper
-       Creates an AudioContext on first use
-       (browser requires user gesture first)
+       WEB AUDIO — lazy init
     ───────────────────────────────────── */
     function getAudioCtx() {
       if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       return audioCtx;
     }
 
-    /**
-     * playTone(freq, type, duration, volume)
-     * Generates a short synthesized sound using the Web Audio API.
-     * No external audio files required.
-     */
     function playTone(freq = 440, type = 'sine', duration = 0.08, volume = 0.15) {
       if (!soundEnabled) return;
       try {
@@ -989,40 +1105,39 @@
         const gain = ctx.createGain();
         osc.connect(gain);
         gain.connect(ctx.destination);
-        osc.type            = type;
+        osc.type = type;
         osc.frequency.value = freq;
         gain.gain.setValueAtTime(volume, ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
         osc.start(ctx.currentTime);
         osc.stop(ctx.currentTime + duration);
-      } catch (e) { /* Audio blocked — fail silently */ }
+      } catch(e) {}
     }
 
-    /* Convenience sound effects */
     const SFX = {
-      correct: () => playTone(880, 'sine',     0.06, 0.1),   // soft high tick
-      wrong:   () => playTone(180, 'sawtooth', 0.12, 0.18),  // low buzz
+      correct: () => playTone(880, 'sine',     0.06, 0.1),
+      wrong:   () => playTone(180, 'sawtooth', 0.12, 0.18),
       start:   () => { playTone(330,'square',0.08,0.15); setTimeout(()=>playTone(550,'square',0.08,0.15),100); },
       win:     () => { [523,659,784,1047].forEach((f,i)=>setTimeout(()=>playTone(f,'sine',0.2,0.2),i*120)); },
       lose:    () => { [300,250,200,150].forEach((f,i)=>setTimeout(()=>playTone(f,'sawtooth',0.18,0.25),i*100)); },
       reset:   () => playTone(220, 'triangle', 0.1, 0.1),
+      /* Ominous low tone when quit modal appears */
+      warn:    () => playTone(120, 'sawtooth', 0.3, 0.12),
     };
 
     /* ─────────────────────────────────────
        PAGE LOAD EVENT
-       Initialises the game when the page
-       has fully loaded.
     ───────────────────────────────────── */
     window.addEventListener('load', () => {
       pickPrompt();
       renderPrompt();
       updateSidebarStats();
-      checkScrollReveal(); // check in case rules are already in view
-      console.log('[TYPE OR DIE] Initialized on page load.');
+      checkScrollReveal();
+      console.log('[TYPE OR DIE] Initialized.');
     });
 
     /* ─────────────────────────────────────
-       PICK A RANDOM PROMPT
+       PICK & RENDER PROMPT
     ───────────────────────────────────── */
     function pickPrompt() {
       const pool   = PROMPTS[state.difficulty];
@@ -1030,16 +1145,11 @@
       state.totalChars = state.prompt.length;
     }
 
-    /* ─────────────────────────────────────
-       RENDER PROMPT AS CHAR SPANS
-       Each character gets its own <span>
-       so we can colour them individually.
-    ───────────────────────────────────── */
     function renderPrompt() {
       promptEl.innerHTML = '';
       [...state.prompt].forEach((ch, i) => {
         const span = document.createElement('span');
-        span.className   = 'char' + (i === 0 ? ' cursor' : '');
+        span.className = 'char' + (i === 0 ? ' cursor' : '');
         span.textContent = ch;
         span.dataset.index = i;
         promptEl.appendChild(span);
@@ -1050,14 +1160,11 @@
        DIFFICULTY SELECTOR
     ───────────────────────────────────── */
     function setDifficulty(level) {
-      if (state.running) return; // lock during active game
+      if (state.running) return;
       state.difficulty = level;
-
-      // Sync all difficulty button groups (main + sidebar)
       document.querySelectorAll('.diff-btn').forEach(btn => {
         btn.classList.toggle('active', btn.textContent.toLowerCase().startsWith(level.slice(0,3)));
       });
-
       pickPrompt();
       renderPrompt();
       clearFormMessage();
@@ -1069,7 +1176,6 @@
     function startGame() {
       if (state.running) return;
 
-      // Reset counters
       state.running      = true;
       state.startTime    = null;
       state.correctChars = 0;
@@ -1079,7 +1185,6 @@
       renderPrompt();
       clearFormMessage();
 
-      // Enable and focus the input
       inputEl.disabled = false;
       inputEl.value    = '';
       inputEl.classList.remove('input-error', 'input-ok');
@@ -1089,21 +1194,18 @@
       startBtn.textContent = '● RUNNING';
       typingCard.classList.add('active');
 
+      /* Update ESC hint to reflect new behaviour during game */
+      escHint.textContent = 'Quit game';
+
       SFX.start();
 
-      // Start the video timer from the beginning
       video.currentTime = 0;
       video.play().catch(() => console.warn('[Video] Autoplay blocked.'));
     }
 
     /* ─────────────────────────────────────
        VIDEO EVENTS
-
-       play     — fires when video starts playing
-       pause    — fires when video is paused
-       ended    — fires when video reaches the end
-       timeupdate — fires continuously as video plays,
-                    used to sync the progress bar
+       play, pause, ended, timeupdate
     ───────────────────────────────────── */
     video.addEventListener('play', () => {
       videoWrap.classList.add('playing');
@@ -1120,7 +1222,7 @@
     video.addEventListener('ended', () => {
       videoWrap.classList.remove('playing');
       videoLabel.textContent = '💀 TIME UP';
-      if (state.running) triggerLose();
+      if (state.running) triggerLose('The timer ran out. You died.');
     });
 
     video.addEventListener('timeupdate', () => {
@@ -1128,29 +1230,21 @@
       const pct = (video.currentTime / video.duration) * 100;
       document.getElementById('video-progress-fill').style.width = pct + '%';
       document.getElementById('video-pct').textContent = Math.round(pct) + '%';
-
-      // Danger zone: flash red when > 75% of video has played
       if (pct > 75 && state.running) {
         document.getElementById('video-progress-fill').style.animation = 'pulse-bar 0.4s infinite alternate';
       }
     });
 
     /* ─────────────────────────────────────
-       KEYBOARD EVENT — typing input
-       Fires on every keystroke.
-       Validates each character and updates
-       the live stats display.
+       KEYBOARD EVENT — typing input (live validation)
     ───────────────────────────────────── */
     inputEl.addEventListener('input', () => {
       if (!state.running) return;
-
-      // Start the WPM timer on first keystroke
       if (!state.startTime) state.startTime = Date.now();
 
       const typed = inputEl.value;
       const chars = document.querySelectorAll('.char');
 
-      // Compare typed input against the prompt character by character
       let lastCorrect = true;
       for (let i = 0; i < typed.length; i++) {
         const span = chars[i];
@@ -1164,16 +1258,11 @@
           lastCorrect = false;
         }
       }
-
-      // Remove styling from characters beyond what's been typed
       for (let i = typed.length; i < chars.length; i++) {
         chars[i].classList.remove('correct','wrong','cursor');
       }
-
-      // Move the cursor underline to the current position
       if (typed.length < chars.length) chars[typed.length].classList.add('cursor');
 
-      // Play sound feedback for the last typed character
       if (typed.length > 0) {
         if (lastCorrect) {
           SFX.correct();
@@ -1183,40 +1272,28 @@
           SFX.wrong();
           inputEl.classList.add('input-error');
           inputEl.classList.remove('input-ok');
-          // Shake the card on a mistake
           typingCard.classList.add('shake');
           typingCard.addEventListener('animationend', () => typingCard.classList.remove('shake'), {once:true});
         }
       }
 
-      // Update live stats (WPM, accuracy, progress bar)
       updateStats(typed);
-
-      // Parallax stripe offset in typing card background
       const progress = typed.length / state.prompt.length;
       typingCard.style.setProperty('--scroll-offset', `-${progress * 200}px`);
 
-      // Check win condition: typed matches prompt exactly
       if (typed === state.prompt) triggerWin();
     });
 
     /* ─────────────────────────────────────
        FORM SUBMISSION EVENT
-       Fires when the user presses Enter
-       inside the typing input.
-
-       We use this to:
-       1. Prevent default form submit (page reload)
-       2. Validate that the input isn't empty
-       3. If game isn't running yet, start it
-       4. If game is running and input matches, trigger win
+       Fires on Enter key inside the form.
+       Validates input and handles game flow.
     ───────────────────────────────────── */
     formEl.addEventListener('submit', (e) => {
-      e.preventDefault(); // prevent page reload
+      e.preventDefault();
 
       const val = inputEl.value.trim();
 
-      // Validation: input must not be empty
       if (!val || val.length === 0) {
         showFormMessage('⚠ Input cannot be empty!', 'error');
         inputEl.classList.add('input-error');
@@ -1224,13 +1301,8 @@
         return;
       }
 
-      // If game isn't running, start it
-      if (!state.running) {
-        startGame();
-        return;
-      }
+      if (!state.running) { startGame(); return; }
 
-      // If game is running, check if the answer is complete and correct
       if (val === state.prompt) {
         triggerWin();
       } else if (val.length < state.prompt.length) {
@@ -1242,12 +1314,9 @@
       }
     });
 
-    /* ─────────────────────────────────────
-       FORM MESSAGE HELPERS
-    ───────────────────────────────────── */
     function showFormMessage(msg, type) {
-      formMsg.textContent  = msg;
-      formMsg.className    = type; // 'error' or 'success'
+      formMsg.textContent = msg;
+      formMsg.className   = type;
       clearTimeout(formMsg._timer);
       formMsg._timer = setTimeout(clearFormMessage, 2500);
     }
@@ -1290,19 +1359,18 @@
 
       SFX.win();
       showFormMessage('✔ COMPLETE! You survived.', 'success');
-      showOverlay(true);
+      showOverlay(true, 'You survived the clock!');
       updateSidebarStats();
-
-      inputEl.disabled     = true;
-      startBtn.disabled    = false;
-      startBtn.textContent = '▶ START';
-      typingCard.classList.remove('active');
+      endGameUI();
     }
 
     /* ─────────────────────────────────────
        LOSE
+       Accepts a custom message so both the
+       timer-ending and ESC-forfeit can call
+       it with different flavour text.
     ───────────────────────────────────── */
-    function triggerLose() {
+    function triggerLose(reason) {
       state.running = false;
 
       state.gamesPlayed++;
@@ -1312,32 +1380,76 @@
       scanlines.classList.add('show');
       setTimeout(() => scanlines.classList.remove('show'), 2000);
 
-      showFormMessage('✖ TIME\'S UP. You died.', 'error');
-      showOverlay(false);
+      showFormMessage('✖ ' + reason, 'error');
+      showOverlay(false, reason);
       updateSidebarStats();
+      endGameUI();
+    }
 
+    /* Shared UI cleanup after game ends */
+    function endGameUI() {
       inputEl.disabled     = true;
       startBtn.disabled    = false;
       startBtn.textContent = '▶ START';
       typingCard.classList.remove('active');
+      escHint.textContent  = 'Close sidebar'; // reset ESC hint label
+    }
+
+    /* ─────────────────────────────────────
+       ESC QUIT MODAL — NEW
+       Opens when player presses ESC during
+       an active game. Pauses the video so
+       no time is lost while deciding.
+    ───────────────────────────────────── */
+    function showQuitModal() {
+      /* Pause video — freeze the timer while player decides */
+      video.pause();
+      videoLabel.textContent = '⏸ PAUSED — SURRENDER?';
+
+      quitModal.classList.add('show');
+      SFX.warn();
+
+      /* Focus the cancel button by default so Enter = keep playing */
+      document.getElementById('quit-cancel-btn').focus();
+    }
+
+    function hideQuitModal() {
+      quitModal.classList.remove('show');
+    }
+
+    /* Player chose YES → forfeit the game */
+    function confirmQuit() {
+      hideQuitModal();
+      triggerLose('You surrendered. Coward.');
+    }
+
+    /* Player chose NO → resume the game exactly where it left off */
+    function cancelQuit() {
+      hideQuitModal();
+      /* Resume the video only if the game is still running */
+      if (state.running) {
+        video.play().catch(() => {});
+        videoLabel.textContent = '⏱ TIMER RUNNING...';
+        inputEl.focus();
+      }
     }
 
     /* ─────────────────────────────────────
        OVERLAY HELPERS
     ───────────────────────────────────── */
-    function showOverlay(win) {
+    function showOverlay(win, reason) {
       const typed    = inputEl.value;
       const total    = typed.length;
       const wrong    = [...typed].filter((ch, i) => ch !== state.prompt[i]).length;
       const accuracy = total > 0 ? Math.round(((total - wrong) / total) * 100) : 0;
 
-      document.getElementById('ov-icon').textContent   = win ? '🏆' : '💀';
-      document.getElementById('ov-title').textContent  = win ? 'YOU WIN' : 'YOU DIED';
-      document.getElementById('ov-title').className    = 'overlay-title ' + (win ? 'win' : 'lose');
-      document.getElementById('ov-sub').textContent    = win ? 'You survived the clock!' : 'The timer claimed your soul.';
-      document.getElementById('ov-wpm').textContent    = state.wpm;
-      document.getElementById('ov-acc').textContent    = accuracy + '%';
-      document.getElementById('ov-chars').textContent  = state.correctChars;
+      document.getElementById('ov-icon').textContent  = win ? '🏆' : '💀';
+      document.getElementById('ov-title').textContent = win ? 'YOU WIN' : 'YOU DIED';
+      document.getElementById('ov-title').className   = 'overlay-title ' + (win ? 'win' : 'lose');
+      document.getElementById('ov-sub').textContent   = reason;
+      document.getElementById('ov-wpm').textContent   = state.wpm;
+      document.getElementById('ov-acc').textContent   = accuracy + '%';
+      document.getElementById('ov-chars').textContent = state.correctChars;
 
       overlay.classList.add('show');
     }
@@ -1384,6 +1496,7 @@
       document.getElementById('chars-display').textContent        = '0';
       document.getElementById('video-progress-fill').style.animation = '';
 
+      escHint.textContent = 'Close sidebar'; // reset ESC hint
       clearFormMessage();
       pickPrompt();
       renderPrompt();
@@ -1411,7 +1524,7 @@
     }
 
     /* ─────────────────────────────────────
-       SOUND TOGGLE BUTTON
+       SOUND TOGGLE
     ───────────────────────────────────── */
     soundBtn.addEventListener('click', () => {
       soundEnabled = !soundEnabled;
@@ -1421,37 +1534,57 @@
 
     /* ─────────────────────────────────────
        KEYBOARD EVENTS — global shortcuts
-       Handles game-wide hotkeys so players
-       can control the game without clicking.
+
+       ESC behaviour is now context-aware:
+       • Quit modal open  → cancel quit (keep playing)
+       • Game running     → show quit confirmation modal
+       • Sidebar open     → close sidebar
+       • Overlay open     → close overlay
     ───────────────────────────────────── */
     document.addEventListener('keydown', (e) => {
-      // ESC — close overlay first, then sidebar
+
+      // ── ESC — context-aware ──────────────────
       if (e.key === 'Escape') {
-        if (overlay.classList.contains('show')) { hideOverlay(); return; }
+        // If quit modal is already showing, cancel = keep playing
+        if (quitModal.classList.contains('show')) {
+          cancelQuit();
+          return;
+        }
+        // If a game is actively running, show the quit confirmation
+        if (state.running) {
+          showQuitModal();
+          return;
+        }
+        // If the result overlay is open, close it
+        if (overlay.classList.contains('show')) {
+          hideOverlay();
+          return;
+        }
+        // Otherwise, close the sidebar
         closeSidebar();
         return;
       }
 
-      // Enter — start game if idle and not focused in input
+      // Enter — start if idle and not inside the typing input
       if (e.key === 'Enter' && document.activeElement !== inputEl) {
-        if (!state.running) startGame();
+        if (!state.running && !quitModal.classList.contains('show')) startGame();
         return;
       }
 
-      // Tab — reset game (prevent browser default focus jump)
+      // Tab — reset
       if (e.key === 'Tab') {
         e.preventDefault();
         if (!state.running) resetGame();
         return;
       }
 
-      // M — toggle sidebar menu
-      if ((e.key === 'm' || e.key === 'M') && document.activeElement !== inputEl) {
+      // M — toggle menu (not while typing or quit modal is open)
+      if ((e.key === 'm' || e.key === 'M') && document.activeElement !== inputEl && !quitModal.classList.contains('show')) {
         sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
         return;
       }
 
-      // S — toggle sound
+      // S — toggle sound (not while typing)
       if ((e.key === 's' || e.key === 'S') && document.activeElement !== inputEl) {
         soundBtn.click();
       }
@@ -1459,66 +1592,46 @@
 
     /* ─────────────────────────────────────
        WINDOW RESIZE EVENT
-       Dynamically adjusts the UI and shows
-       current viewport dimensions.
     ───────────────────────────────────── */
     let resizeTimer;
     window.addEventListener('resize', () => {
       const w = window.innerWidth;
       const h = window.innerHeight;
-
-      // Show a live dimension readout in the corner
       resizeEl.textContent = `${w} × ${h}`;
       resizeEl.classList.add('show');
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(() => resizeEl.classList.remove('show'), 1500);
-
-      // On small screens close the sidebar so it doesn't cover content
       if (w < 500 && sidebar.classList.contains('open')) closeSidebar();
     });
 
     /* ─────────────────────────────────────
-       SCROLL EVENT
-       Two purposes:
-       1. Parallax on the header title
-       2. Trigger the scroll-reveal animation
-          on the rules cards
+       SCROLL EVENT — parallax + reveal
     ───────────────────────────────────── */
     window.addEventListener('scroll', () => {
-      // Parallax: header drifts and fades as you scroll down
       const titleEl = document.querySelector('.title-main');
       const sy = window.scrollY;
       titleEl.style.transform = `translateY(${sy * 0.3}px)`;
       titleEl.style.opacity   = Math.max(0, 1 - sy / 400);
 
-      // Reveal rule cards when they enter the viewport
       checkScrollReveal();
 
-      // Hide the scroll hint once user has scrolled past it
       const hint = document.getElementById('scroll-hint');
-      if (sy > 200) hint.style.opacity = '0';
-      else hint.style.opacity = '1';
+      hint.style.opacity = sy > 200 ? '0' : '1';
     });
 
     /* ─────────────────────────────────────
        SCROLL REVEAL — rule cards
-       Adds .visible class when a card
-       enters the viewport, triggering the
-       CSS fade-in + slide-up transition.
     ───────────────────────────────────── */
     function checkScrollReveal() {
       document.querySelectorAll('[data-scroll-reveal]').forEach(el => {
-        const rect = el.getBoundingClientRect();
-        if (rect.top < window.innerHeight - 40) {
+        if (el.getBoundingClientRect().top < window.innerHeight - 40) {
           el.classList.add('visible');
         }
       });
     }
 
     /* ─────────────────────────────────────
-       HOVER EVENTS — rule card icons
-       Scale up the icon emoji on hover
-       for a playful micro-interaction.
+       HOVER EVENTS — rule cards
     ───────────────────────────────────── */
     document.querySelectorAll('.rule-card').forEach(card => {
       const icon = card.querySelector('.rule-icon');
